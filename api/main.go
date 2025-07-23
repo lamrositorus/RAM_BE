@@ -6,7 +6,7 @@ import (
 	"RAM/models"
 	"RAM/routes"
 	"log"
-
+	"os"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -43,6 +43,8 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
 	})
-
+	port := os.Getenv("PORT") // Vercel akan menyediakan ini
+	app.Listen(":" + port)
+	
 	log.Fatal(app.Listen(":3000"))
 }
