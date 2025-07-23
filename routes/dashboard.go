@@ -2,13 +2,13 @@ package routes
 
 import (
 	"RAM/models"
+	"RAM/middleware"
 	"github.com/gofiber/fiber/v2"
 	"database/sql"
 )
 
 func SetupDashboardRoutes(app *fiber.App, db *sql.DB) {
-	app.Get("/dashboard", func(c *fiber.Ctx) error {
-		// Get data keuangan
+	app.Get("/dashboard", middleware.JWTProtected(), func(c *fiber.Ctx) error {
 		keuangan, err := models.GetKeuangan(db)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil data keuangan"})
@@ -23,7 +23,6 @@ func SetupDashboardRoutes(app *fiber.App, db *sql.DB) {
 			}
 		}
 
-		// Get data modal
 		modal, err := models.GetModal(db)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil data modal"})
@@ -34,7 +33,6 @@ func SetupDashboardRoutes(app *fiber.App, db *sql.DB) {
 			totalModal += m.TotalModal
 		}
 
-		// Get data keuntungan
 		keuntungan, err := models.GetEstimasiKeuntungan(db)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil data keuntungan"})
@@ -45,14 +43,12 @@ func SetupDashboardRoutes(app *fiber.App, db *sql.DB) {
 			totalUntung += k.EstimasiKeuntungan
 		}
 
-		
-
 		return c.JSON(fiber.Map{
 			"total_pemasukan":   totalPemasukan,
 			"total_pengeluaran": totalPengeluaran,
 			"saldo_akhir":       totalPemasukan - totalPengeluaran,
 			"total_modal":       totalModal,
-			"total_untung":      totalUntung,			
+			"total_untung":      totalUntung,
 		})
 	})
 }

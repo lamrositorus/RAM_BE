@@ -1,36 +1,57 @@
-// package config handles application configuration including database credentials
-
 package config
 
 import (
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
-// Config holds the configuration for the application.
 type Config struct {
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
+	DatabaseURL string // Full connection string
+	DBHost      string
+	DBPort      string
+	DBUser       string
+	DBPassword  string
+	DBName      string
+	UseURL      bool
 }
 
-// LoadConfig loads configuration from environment variables.
 func LoadConfig() Config {
-	return Config{
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "admin"),
-		DBName:     getEnv("DB_NAME", "ramBS"),
+	// Memuat variabel dari file .env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
 	}
+
+	dbURL := os.Getenv("DATABASE_URL")
+	useURL := false
+	if dbURL != "" {
+		useURL = true
+	}
+
+	cfg := Config{
+		DatabaseURL: dbURL,
+		DBHost:      getEnv("DB_HOST", "db.filgqowjdfvbnlqbcymu.supabase.co"),
+		DBPort:      getEnv("DB_PORT", "5432"),
+		DBUser:      getEnv("DB_USER", "postgres"),
+		DBPassword:  getEnv("DB_PASSWORD", "admin"),
+		DBName:      getEnv("DB_NAME", "postgres"),
+		UseURL:      useURL,
+	}
+
+	if useURL {
+		log.Println("Using DATABASE_URL for database connection")
+	} else {
+		log.Println("Using individual DB connection parameters")
+	}
+
+	return cfg
 }
 
-// getEnv fetches an environment variable or returns a default value if not set.
-func getEnv(key string, defaultVal string) string {
+func getEnv(key, defaultVal string) string {
 	if val, exists := os.LookupEnv(key); exists {
 		return val
 	}
 	return defaultVal
 }
-

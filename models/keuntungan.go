@@ -7,14 +7,14 @@ import (
 )
 
 type EstimasiKeuntungan struct {
-    ID                   int    `json:"id"`
-    Tanggal              string `json:"tanggal"`
-    SpCairPabrik         int    `json:"sp_cair_pabrik"`
-    HargaTbsPabrik       int    `json:"harga_tbs_pabrik"`
-    TonasiSpRam          int    `json:"tonasi_sp_ram"`
-    HargaTbsBeliRam      int    `json:"harga_tbs_beli_ram"`
-    TotalModalBeli       int    `json:"total_modal_beli"`
-    EstimasiKeuntungan   int    `json:"estimasi_keuntungan"`
+	ID                 int       `json:"id"`
+	Tanggal            time.Time `json:"tanggal"`
+	SpCairPabrik       int       `json:"sp_cair_pabrik"`
+	HargaTbsPabrik     int       `json:"harga_tbs_pabrik"`
+	TonasiSpRam        int       `json:"tonasi_sp_ram"`
+	HargaTbsBeliRam    int       `json:"harga_tbs_beli_ram"`
+	TotalModalBeli     int       `json:"total_modal_beli"`
+	EstimasiKeuntungan int       `json:"estimasi_keuntungan"`
 }
 
 func CalculateProfit(spCairPabrik, hargaTbsPabrik, totalModalBeli int) int {
@@ -29,7 +29,7 @@ func CreateEstimasiKeuntungan(db *sql.DB, e *EstimasiKeuntungan) error {
 	defer tx.Rollback()
 
 	e.TotalModalBeli = e.TonasiSpRam * e.HargaTbsBeliRam
-	e.Tanggal = time.Now().Format("2006-01-02")
+	e.Tanggal = time.Now()
 
 	err = tx.QueryRow(
 		`INSERT INTO estimasi_keuntungan 
@@ -45,7 +45,7 @@ func CreateEstimasiKeuntungan(db *sql.DB, e *EstimasiKeuntungan) error {
 
 	keuangan := Keuangan{
 		Tanggal:   e.Tanggal,
-		Deskripsi: fmt.Sprintf("Estimasi keuntungan tonasi SP pabrik %d kg x  @%d", e.SpCairPabrik, e.HargaTbsPabrik),
+		Deskripsi: fmt.Sprintf("Estimasi keuntungan tonasi SP pabrik %d kg x @%d", e.SpCairPabrik, e.HargaTbsPabrik),
 		Nominal:   e.EstimasiKeuntungan,
 		Tipe:      "pemasukan",
 	}
@@ -64,31 +64,32 @@ func CreateEstimasiKeuntungan(db *sql.DB, e *EstimasiKeuntungan) error {
 }
 
 func GetEstimasiKeuntungan(db *sql.DB) ([]EstimasiKeuntungan, error) {
-    rows, err := db.Query(`
-        SELECT id, tanggal, sp_cair_pabrik, harga_tbs_pabrik, tonasi_sp_ram, harga_tbs_beli_ram, total_modal_beli, estimasi_keuntungan 
-        FROM estimasi_keuntungan 
-        ORDER BY tanggal ASC`)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := db.Query(`
+		SELECT id, tanggal, sp_cair_pabrik, harga_tbs_pabrik, tonasi_sp_ram, 
+		harga_tbs_beli_ram, total_modal_beli, estimasi_keuntungan 
+		FROM estimasi_keuntungan 
+		ORDER BY tanggal DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var estimasi []EstimasiKeuntungan
-    for rows.Next() {
-        var e EstimasiKeuntungan
-        if err := rows.Scan(
-            &e.ID,
-            &e.Tanggal,
-            &e.SpCairPabrik,
-            &e.HargaTbsPabrik,
-            &e.TonasiSpRam,
-            &e.HargaTbsBeliRam,
-            &e.TotalModalBeli,
-            &e.EstimasiKeuntungan,
-        ); err != nil {
-            return nil, err
-        }
-        estimasi = append(estimasi, e)
-    }
-    return estimasi, nil
+	var estimasi []EstimasiKeuntungan
+	for rows.Next() {
+		var e EstimasiKeuntungan
+		if err := rows.Scan(
+			&e.ID,
+			&e.Tanggal,
+			&e.SpCairPabrik,
+			&e.HargaTbsPabrik,
+			&e.TonasiSpRam,
+			&e.HargaTbsBeliRam,
+			&e.TotalModalBeli,
+			&e.EstimasiKeuntungan,
+		); err != nil {
+			return nil, err
+		}
+		estimasi = append(estimasi, e)
+	}
+	return estimasi, nil
 }

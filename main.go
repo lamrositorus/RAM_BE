@@ -3,42 +3,40 @@ package main
 import (
 	"RAM/config"
 	"RAM/middleware"
+	"RAM/models"
 	"RAM/routes"
-	"RAM/utils"
 	"log"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
 	cfg := config.LoadConfig()
 
-	// Init GORM DB
-	gormDB, err := utils.InitDB(cfg)
+	gormDB, err := models.InitDB(cfg)
 	if err != nil {
 		log.Fatalf("Failed to init GORM DB: %v", err)
 	}
 
-	// Get sql.DB for raw SQL
 	sqlDB, err := gormDB.DB()
 	if err != nil {
 		log.Fatalf("Failed to get *sql.DB: %v", err)
 	}
+	defer sqlDB.Close()
 
 	app := fiber.New()
-app.Use(cors.New(cors.Config{
-    AllowOrigins: "*", // atau "http://localhost:5173" untuk lebih aman
-    AllowHeaders: "Origin, Content-Type, Accept, Authorization",
-}))
-
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+	}))
 	app.Use(middleware.LoggingMiddleware)
 
-	// Routes
-	routes.SetupAuthRoutes(app, gormDB)       // pakai GORM
+	// Setup your routes here
+	routes.SetupAuthRoutes(app, gormDB)
 	routes.SetupDashboardRoutes(app, sqlDB)
-	routes.SetupKeuanganRoutes(app, sqlDB)    // pakai sql.DB
-	routes.SetupModalRoutes(app, sqlDB)     // bisa sama juga
+	routes.SetupKeuanganRoutes(app, sqlDB)
+	routes.SetupModalRoutes(app, sqlDB)
 	routes.SetupKeuntunganRoutes(app, sqlDB)
 	routes.SetupSusutRoutes(app, sqlDB)
 
