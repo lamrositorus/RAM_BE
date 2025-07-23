@@ -43,8 +43,8 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
 	})
-	port := os.Getenv("PORT") // Vercel akan menyediakan ini
+	port := os.Getenv("PORT")
 	app.Listen(":" + port)
-	
+
 	log.Fatal(app.Listen(":3000"))
 }

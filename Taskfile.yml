@@ -4,7 +4,3 @@ tasks:
   dev:
     cmds:
       - go run api/main.go
-    sources:
-      - api/**/*.go
-    generate:
-      - api/**/*.go
